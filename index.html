@@ -116,7 +116,14 @@
     display: grid; grid-template-columns: 24px 1fr auto; grid-template-areas: "ic nm sc"; align-items: center; gap: 6px;
     transition: transform 0.15s, box-shadow 0.15s;
   }
-  .pcard svg { grid-area: ic; width: 24px; height: 24px; }
+  .pcard .ic { grid-area: ic; display: grid; }
+  .pcard .ic svg { width: 24px; height: 24px; }
+  .mark.dot { filter: drop-shadow(0 1.5px 1px rgba(0, 0, 0, 0.3)); }
+  [data-pieces="dots"] .pcard.x.turn { box-shadow: 0 0 0 3px #ff4d4d; background: #fff0f0; }
+  [data-pieces="dots"] .pcard.o.turn { box-shadow: 0 0 0 3px #22c55e; background: #eefbf2; }
+  .seg .d { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #2b2a4c; vertical-align: -2px; margin-right: 2px; }
+  .seg .d.r { background: #ff4d4d; } .seg .d.g { background: #22c55e; }
+  #themes .row { margin-bottom: 8px; }
   .pcard .score { grid-area: sc; font-size: 24px; font-weight: 800; line-height: 1; }
   .pcard input {
     grid-area: nm; width: 100%; min-width: 0; min-height: 32px; border: 2px dashed var(--line); border-radius: 9px;
@@ -138,8 +145,6 @@
     box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px rgba(43, 42, 76, 0.45);
     width: min(100%, 340px); margin: 0 auto;
   }
-  .board-wrap[data-n="5"] { width: min(100%, 420px); }
-  .board-wrap[data-n="10"] { width: min(100%, 560px); padding: 5px; border-radius: 14px; }
   /* 15x15: let the board use a little of the gutter so cells stay near 22px at 360px */
   .board-wrap.big {
     width: min(calc(100% + 16px), 600px); padding: 2px; border-radius: 10px;
@@ -147,16 +152,12 @@
   }
   .gridbox { position: relative; }
   #board { display: grid; background: var(--line); gap: 6px; border-radius: 10px; overflow: hidden; }
-  #board[data-n="5"] { gap: 4px; }
-  #board[data-n="10"] { gap: 2px; border-radius: 8px; }
   .big #board { gap: 1px; border-radius: 6px; }
   .cell {
     aspect-ratio: 1; min-width: 0; padding: 0; border: 0; background: var(--cell);
     cursor: pointer; display: grid; place-items: center; touch-action: manipulation;
   }
   #board[data-n="3"] .cell { border-radius: 14px; }
-  #board[data-n="5"] .cell { border-radius: 10px; }
-  #board[data-n="10"] .cell { border-radius: 6px; }
   .cell.last { background: #fff3c4; }
   .cell.win { background: #ffe28a; }
   .cell.win svg { animation: bounce 0.6s ease-in-out infinite alternate; }
@@ -222,6 +223,12 @@
   </header>
 
   <section id="themes" class="card" hidden data-i18n-aria="themesLabel">
+    <div class="row"><span data-i18n="piecesL"></span>
+      <div class="seg" data-set="pieces">
+        <button type="button" data-v="xo" aria-pressed="false">X · O</button>
+        <button type="button" data-v="dots" aria-pressed="false"><i class="d r"></i><i class="d g"></i> <span data-i18n="piecesDots"></span></button>
+      </div>
+    </div>
     <div class="theme-grid" id="themeGrid"></div>
   </section>
 
@@ -232,17 +239,16 @@
         <button type="button" data-v="5" aria-pressed="false"><span data-i18n="mode5"></span><small data-i18n="mode5s"></small></button>
       </div>
     </div>
-    <div class="row" id="sizeRow"><span data-i18n="sizeL"></span>
-      <div class="seg" data-set="bsize">
-        <button type="button" data-v="3" aria-pressed="false">3×3</button>
-        <button type="button" data-v="5" aria-pressed="false">5×5</button>
-        <button type="button" data-v="10" aria-pressed="false">10×10</button>
-      </div>
-    </div>
     <div class="row"><span data-i18n="opp"></span>
       <div class="seg" data-set="opp">
         <button type="button" data-v="pvp" aria-pressed="false"><span data-i18n="pvp"></span><small data-i18n="pvps"></small></button>
         <button type="button" data-v="ai" aria-pressed="false" data-i18n="ai"></button>
+      </div>
+    </div>
+    <div class="row" id="firstRow" hidden><span data-i18n="firstL"></span>
+      <div class="seg" data-set="first">
+        <button type="button" data-v="human" aria-pressed="false" data-i18n="firstHuman"></button>
+        <button type="button" data-v="ai" aria-pressed="false" data-i18n="firstAi"></button>
       </div>
     </div>
     <div class="row" id="levelRow" hidden><span data-i18n="level"></span>
@@ -256,7 +262,7 @@
   <section class="players" data-i18n-aria="playersLabel">
     <div class="pcard x" id="cardX">
       <div class="top2">
-        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M9 9L31 31M31 9L9 31" stroke="#ff5a36" stroke-width="7" stroke-linecap="round"/></svg>
+        <span class="ic" id="icX" aria-hidden="true"></span>
         <span class="score" id="scoreX">0</span>
       </div>
       <input id="nameX" maxlength="12" autocomplete="off" data-i18n-aria="nameXLabel">
@@ -264,7 +270,7 @@
     <div class="draws"><span><b id="scoreD">0</b><span data-i18n="draws"></span></span></div>
     <div class="pcard o" id="cardO">
       <div class="top2">
-        <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="12" fill="none" stroke="#1e88ff" stroke-width="6.5"/></svg>
+        <span class="ic" id="icO" aria-hidden="true"></span>
         <span class="score" id="scoreO">0</span>
       </div>
       <input id="nameO" maxlength="12" autocomplete="off" data-i18n-aria="nameOLabel">
@@ -304,7 +310,7 @@
 <script>
 (() => {
   'use strict';
-  const APP_VERSION = "1.2"; // bump on every update
+  const APP_VERSION = "1.3"; // bump on every update
   const $ = (s) => document.querySelector(s);
   const reduceMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
@@ -314,10 +320,12 @@
     vi: {
       docTitle: 'Cờ Caro Gia Đình', title: 'Cờ Caro', subtitle: 'Gia đình',
       themeBtn: 'Đổi hình nền', themesLabel: 'Chọn hình nền', settingsLabel: 'Cài đặt ván chơi',
-      kind: 'Kiểu chơi', mode3: '3 liên tiếp', mode3s: 'bàn {n}×{n}', sizeL: 'Cỡ bàn', mode5: '5 liên tiếp', mode5s: 'bàn 15×15',
+      kind: 'Kiểu chơi', mode3: '3 liên tiếp', mode3s: 'bàn 3×3', mode5: '5 liên tiếp', mode5s: 'bàn 15×15',
       opp: 'Đối thủ', pvp: '2 người', pvps: 'chung máy', ai: 'Chơi với máy',
       level: 'Độ khó', easy: 'Dễ', hard: 'Khó',
       playersLabel: 'Người chơi', nameXLabel: 'Tên người chơi X', nameOLabel: 'Tên người chơi O',
+      firstL: 'Đi trước', firstHuman: 'Bạn đi trước', firstAi: 'Máy đi trước', piecesL: 'Kiểu quân', piecesDots: 'Chấm màu',
+      red: 'Đỏ', green: 'Xanh', defRed: 'Bạn Đỏ', defGreen: 'Bạn Xanh',
       defX: 'Bạn X', defO: 'Bạn O', computer: 'Máy', draws: 'hòa',
       boardLabel: 'Bàn cờ', cell: 'Hàng {r}, cột {c}',
       newGame: 'Ván mới', undo: 'Đi lại', soundOn: 'Bật âm thanh', soundOff: 'Tắt âm thanh', langLabel: 'Ngôn ngữ', langShort: 'VI',
@@ -331,10 +339,12 @@
     en: {
       docTitle: 'Family Caro', title: 'Caro', subtitle: 'Family game',
       themeBtn: 'Change background', themesLabel: 'Choose a background', settingsLabel: 'Game settings',
-      kind: 'Game', mode3: '3 in a row', mode3s: '{n}×{n} board', sizeL: 'Board', mode5: '5 in a row', mode5s: '15×15 board',
+      kind: 'Game', mode3: '3 in a row', mode3s: '3×3 board', mode5: '5 in a row', mode5s: '15×15 board',
       opp: 'Versus', pvp: '2 players', pvps: 'same device', ai: 'Play the computer',
       level: 'Level', easy: 'Easy', hard: 'Hard',
       playersLabel: 'Players', nameXLabel: 'Name of player X', nameOLabel: 'Name of player O',
+      firstL: 'First', firstHuman: 'You first', firstAi: 'Computer first', piecesL: 'Pieces', piecesDots: 'Color dots',
+      red: 'Red', green: 'Green', defRed: 'Red', defGreen: 'Green',
       defX: 'Player X', defO: 'Player O', computer: 'Computer', draws: 'draws',
       boardLabel: 'Game board', cell: 'Row {r}, column {c}',
       newGame: 'New game', undo: 'Undo', soundOn: 'Turn sound on', soundOff: 'Turn sound off', langLabel: 'Language', langShort: 'EN',
@@ -348,10 +358,12 @@
     zh: {
       docTitle: '家庭五子棋', title: '五子棋', subtitle: '全家一起玩',
       themeBtn: '更换背景', themesLabel: '选择背景', settingsLabel: '游戏设置',
-      kind: '玩法', mode3: '连成3个', mode3s: '{n}×{n} 棋盘', sizeL: '棋盘', mode5: '连成5个', mode5s: '15×15 棋盘',
+      kind: '玩法', mode3: '连成3个', mode3s: '3×3 棋盘', mode5: '连成5个', mode5s: '15×15 棋盘',
       opp: '对手', pvp: '双人', pvps: '同一台设备', ai: '和电脑玩',
       level: '难度', easy: '简单', hard: '困难',
       playersLabel: '玩家', nameXLabel: 'X 玩家的名字', nameOLabel: 'O 玩家的名字',
+      firstL: '先手', firstHuman: '你先走', firstAi: '电脑先走', piecesL: '棋子', piecesDots: '彩色圆点',
+      red: '红', green: '绿', defRed: '红方', defGreen: '绿方',
       defX: '玩家 X', defO: '玩家 O', computer: '电脑', draws: '平局',
       boardLabel: '棋盘', cell: '第 {r} 行，第 {c} 列',
       newGame: '新一局', undo: '悔棋', soundOn: '打开声音', soundOff: '关闭声音', langLabel: '语言', langShort: '中文',
@@ -370,7 +382,7 @@
     if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]);
     return s;
   }
-  const isDefaultName = (p, v) => LANGS.some((l) => I18N[l]['def' + p] === v);
+  const isDefaultName = (p, v) => LANGS.some((l) => I18N[l]['def' + p] === v || I18N[l][p === 'X' ? 'defRed' : 'defGreen'] === v);
 
   /* ================= Themes ================= */
   const THEMES = [
@@ -385,7 +397,7 @@
   /* ================= State ================= */
   const KEY = 'caro-family-v1';
   const state = {
-    mode: '3', bsize: '3', opp: 'pvp', level: 'easy',
+    mode: '3', opp: 'pvp', level: 'easy', first: 'human', pieces: 'xo',
     names: { X: '', O: '' }, // empty = default name of the current language
     theme: 'space', sound: true, score: { X: 0, O: 0, D: 0 },
     size: 3, win: 3, board: [], turn: 'X', over: false, winner: null,
@@ -517,6 +529,7 @@
   }
   function aiPick(board, size, ai, opp, level, win) {
     if (win == null) win = size === 15 ? 5 : 3;
+    if (size > 3 && board.every((v) => !v)) { const m = Math.floor(size / 2); return m * size + m; } // opening move in the centre
     if (size === 3) return level === 'hard' ? aiHard3(board, ai) : aiEasy(board, size);
     return level === 'hard' ? aiHeur(board, size, ai, win) : aiEasy(board, size);
   }
@@ -653,13 +666,14 @@
 
   /* ================= Persistence ================= */
   function prefs() {
-    return { lang, mode: state.mode, bsize: state.bsize, opp: state.opp, level: state.level, names: state.names, theme: state.theme, sound: state.sound, score: state.score };
+    return { lang, mode: state.mode, first: state.first, pieces: state.pieces, opp: state.opp, level: state.level, names: state.names, theme: state.theme, sound: state.sound, score: state.score };
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(prefs())); } catch (e) {} }
   function applyPrefs(d) {
     if (!d || typeof d !== 'object') return;
     if (LANGS.includes(d.lang)) lang = d.lang;
-    if (['3', '5', '10'].includes(d.bsize)) state.bsize = d.bsize;
+    if (d.first === 'human' || d.first === 'ai') state.first = d.first;
+    if (d.pieces === 'xo' || d.pieces === 'dots') state.pieces = d.pieces;
     if (d.mode === '3' || d.mode === '5') state.mode = d.mode;
     if (d.opp === 'pvp' || d.opp === 'ai') state.opp = d.opp;
     if (d.level === 'easy' || d.level === 'hard') state.level = d.level;
@@ -672,16 +686,26 @@
       ['X', 'O', 'D'].forEach((k) => { const v = Number(d.score[k]); if (Number.isFinite(v) && v >= 0) state.score[k] = Math.floor(v); });
     }
   }
-  function setSize() { state.size = state.mode === '3' ? Number(state.bsize) : 15; state.win = state.mode === '3' ? 3 : 5; }
+  function setSize() { state.size = state.mode === '3' ? 3 : 15; state.win = state.mode === '3' ? 3 : 5; }
 
   /* ================= Rendering ================= */
   const boardEl = $('#board'), wrapEl = $('#boardWrap'), wline = $('#wline');
   let builtSize = 0, prevLast = null;
-  const displayName = (p) => (p === 'O' && state.opp === 'ai' ? t('computer') : (state.names[p].trim() || t('def' + p)));
+  const dots = () => state.pieces === 'dots';
+  const defName = (p) => (dots() ? t(p === 'X' ? 'defRed' : 'defGreen') : t('def' + p));
+  const sym = (p) => (dots() ? t(p === 'X' ? 'red' : 'green') : p);
+  const displayName = (p) => (p === 'O' && state.opp === 'ai' ? t('computer') : (state.names[p].trim() || defName(p)));
 
-  const markSvg = (p) => p === 'X'
-    ? '<svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M9 9L31 31M31 9L9 31" stroke="#ff5a36" stroke-width="7" stroke-linecap="round"/></svg>'
-    : '<svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="11.5" fill="none" stroke="#1e88ff" stroke-width="6.5"/></svg>';
+  const markSvg = (p) => {
+    if (dots()) {
+      return p === 'X'
+        ? '<svg class="mark dot" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#ff4d4d" stroke="#8c1d1d" stroke-width="2.5"/></svg>'
+        : '<svg class="mark dot" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#22c55e" stroke="#0f6b2f" stroke-width="2.5"/><circle cx="20" cy="20" r="6" fill="none" stroke="#fff" stroke-width="2.5"/></svg>';
+    }
+    return p === 'X'
+      ? '<svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M9 9L31 31M31 9L9 31" stroke="#ff5a36" stroke-width="7" stroke-linecap="round"/></svg>'
+      : '<svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="11.5" fill="none" stroke="#1e88ff" stroke-width="6.5"/></svg>';
+  };
 
   const cellLabel = (i, n) => t('cell', { r: Math.floor(i / n) + 1, c: (i % n) + 1 });
   function buildBoard() {
@@ -707,13 +731,15 @@
     b.className = 'cell' + (v ? ' filled' : '');
     b.innerHTML = v ? markSvg(v) : '';
     if (v && animate) b.firstChild.classList.add('pop');
-    b.setAttribute('aria-label', cellLabel(i, state.size) + (v ? `: ${v}` : ''));
+    b.setAttribute('aria-label', cellLabel(i, state.size) + (v ? `: ${sym(v)}` : ''));
     if (state.last === i) b.classList.add('last');
     if (state.over && state.winCells.some(([r, c]) => r * state.size + c === i)) b.classList.add('win');
   }
   function renderAll() {
     if (builtSize !== state.size) buildBoard();
     for (let i = 0; i < state.size * state.size; i++) renderCell(i, false);
+    $('#icX').innerHTML = markSvg('X'); $('#icO').innerHTML = markSvg('O');
+    document.documentElement.dataset.pieces = state.pieces;
     drawWinLine();
   }
   function drawWinLine() {
@@ -727,7 +753,7 @@
     ln.setAttribute('x2', z[1] + 0.5); ln.setAttribute('y2', z[0] + 0.5);
     ln.setAttribute('pathLength', '1');
     ln.setAttribute('stroke', '#2b2a4c'); ln.setAttribute('stroke-opacity', '0.85');
-    ln.setAttribute('stroke-width', n <= 5 ? '0.14' : '0.2');
+    ln.setAttribute('stroke-width', n === 3 ? '0.14' : '0.2');
     ln.setAttribute('stroke-linecap', 'round');
     wline.appendChild(ln);
   }
@@ -737,13 +763,12 @@
       seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(state[key] === b.dataset.v)));
     });
     $('#levelRow').hidden = state.opp !== 'ai';
-    $('#sizeRow').hidden = state.mode !== '3';
-    $('[data-i18n="mode3s"]').textContent = t('mode3s', { n: state.bsize });
+    $('#firstRow').hidden = state.opp !== 'ai';
     const nx = $('#nameX'), no = $('#nameO');
-    if (document.activeElement !== nx) nx.value = state.names.X || t('defX');
+    if (document.activeElement !== nx) nx.value = state.names.X || defName('X');
     no.disabled = state.opp === 'ai';
     if (state.opp === 'ai') no.value = t('computer');
-    else if (document.activeElement !== no) no.value = state.names.O || t('defO');
+    else if (document.activeElement !== no) no.value = state.names.O || defName('O');
     $('#scoreX').textContent = state.score.X;
     $('#scoreO').textContent = state.score.O;
     $('#scoreD').textContent = state.score.D;
@@ -752,10 +777,10 @@
     let msg;
     if (state.over) msg = state.winner ? t('statusWin', { name: displayName(state.winner) }) : t('statusDraw');
     else if (aiBusy) msg = t('thinking');
-    else msg = t('turn', { name: displayName(state.turn), p: state.turn });
+    else msg = t('turn', { name: displayName(state.turn), p: sym(state.turn) });
     $('#status').innerHTML = '<span class="status-pill"></span>';
     $('#status').firstChild.textContent = msg;
-    $('#btnUndo').disabled = state.history.length === 0;
+    $('#btnUndo').disabled = !canUndo();
     const snd = $('#btnSound');
     snd.textContent = state.sound ? '🔊' : '🔇';
     snd.setAttribute('aria-pressed', String(state.sound));
@@ -804,12 +829,15 @@
   function clearTimers() {
     clearTimeout(aiTimer); clearTimeout(resultTimer); aiBusy = false;
   }
+  const startTurn = () => (state.opp === 'ai' && state.first === 'ai' ? 'O' : 'X'); // human is always X, computer always O
+  const canUndo = () => state.history.length > 0 && (state.opp !== 'ai' || state.history.some((m) => m.p === 'X'));
   function newGame() {
     clearTimers(); fxStop(); closeModal();
     setSize();
-    Object.assign(state, { board: new Array(state.size * state.size).fill(null), turn: 'X', over: false, winner: null, winCells: [], history: [], last: null });
+    Object.assign(state, { board: new Array(state.size * state.size).fill(null), turn: startTurn(), over: false, winner: null, winCells: [], history: [], last: null });
     prevLast = null;
     buildBoard(); renderAll(); updateUI();
+    maybeAI(); // computer opens when it goes first
   }
   function play(r, c) {
     const n = state.size, i = r * n + c;
@@ -841,7 +869,7 @@
     }, 400);
   }
   function undo() {
-    if (!state.history.length) return;
+    if (!canUndo()) return; // never remove the computer's opening move
     clearTimers(); fxStop(); closeModal();
     if (state.over) { if (state.winner) state.score[state.winner] = Math.max(0, state.score[state.winner] - 1); else state.score.D = Math.max(0, state.score.D - 1); }
     state.over = false; state.winner = null; state.winCells = [];
@@ -909,6 +937,13 @@
   }
 
   /* ================= Events ================= */
+  // Changing piece style keeps the running game: just redraw
+  function setPieces(v) {
+    if (v !== 'xo' && v !== 'dots') return;
+    state.pieces = v; save(); renderAll(); updateUI();
+    if (!$('#modal').hidden) fillModal();
+  }
+  function setFirst(v) { if (v === 'human' || v === 'ai') setOpt('first', v); }
   function setOpt(key, v) {
     if (state[key] === v) return;
     state[key] = v;
@@ -916,7 +951,7 @@
   }
   function wire() {
     document.querySelectorAll('.seg button').forEach((b) =>
-      b.addEventListener('click', () => setOpt(b.parentElement.dataset.set, b.dataset.v)));
+      b.addEventListener('click', () => { const k = b.parentElement.dataset.set; if (k === 'pieces') setPieces(b.dataset.v); else setOpt(k, b.dataset.v); }));
     boardEl.addEventListener('click', (e) => {
       const b = e.target.closest('.cell'); if (!b) return;
       if (aiBusy || (state.opp === 'ai' && state.turn === 'O')) return;
@@ -933,7 +968,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').hidden) { fxStop(); closeModal(); } });
     [['X', '#nameX'], ['O', '#nameO']].forEach(([p, sel]) => {
       const inp = $(sel);
-      inp.addEventListener('input', () => { if (state.opp === 'ai' && p === 'O') return; state.names[p] = inp.value === t('def' + p) ? '' : inp.value.slice(0, 12); save(); updateUI(); });
+      inp.addEventListener('input', () => { if (state.opp === 'ai' && p === 'O') return; state.names[p] = inp.value === defName(p) ? '' : inp.value.slice(0, 12); save(); updateUI(); });
       inp.addEventListener('blur', () => { if (!state.names[p].trim()) { state.names[p] = ''; } updateUI(); save(); });
     });
   }
@@ -945,7 +980,8 @@
     if (data.prefs) applyPrefs(data.prefs);
     setSize();
     state.board = new Array(state.size * state.size).fill(null);
-    if (Array.isArray(data.board) && data.board.length === state.size * state.size && data.mode === state.mode && data.bsize === state.bsize) {
+    state.turn = startTurn();
+    if (Array.isArray(data.board) && data.board.length === state.size * state.size && data.mode === state.mode) {
       state.board = data.board; state.turn = data.turn === 'O' ? 'O' : 'X';
       state.over = !!data.over; state.winner = data.winner || null;
       state.winCells = Array.isArray(data.winCells) ? data.winCells : [];
@@ -958,20 +994,18 @@
   }
   try {
     window.claude?.hot?.snapshot(() => ({
-      prefs: prefs(), mode: state.mode, bsize: state.bsize, board: state.board, turn: state.turn, over: state.over,
+      prefs: prefs(), mode: state.mode, board: state.board, turn: state.turn, over: state.over,
       winner: state.winner, winCells: state.winCells, history: state.history, last: state.last,
     }));
   } catch (e) {}
   // Test hooks: pure logic plus a direct move helper
-  // Test helper: switch board size (3, 5, 10 use 3-in-a-row; 15 uses 5-in-a-row)
+  // Test helper: switch mode (3 = 3x3 / 3-in-a-row, 15 = 15x15 / 5-in-a-row)
   function setBoard(n) {
     n = Number(n);
-    if (n === 15) state.mode = '5';
-    else if ([3, 5, 10].includes(n)) { state.mode = '3'; state.bsize = String(n); }
-    else return;
+    if (n === 15) state.mode = '5'; else if (n === 3) state.mode = '3'; else return;
     newGame(); save();
   }
-  window.__caro = { setBoard, aiHeur, state, checkWin, play, aiPick, newGame, undo, setLang };
+  window.__caro = { setBoard, setFirst, setPieces, aiHeur, state, checkWin, play, aiPick, newGame, undo, setLang };
   try {
     window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
   } catch (e) { start({}); }
