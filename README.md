@@ -9,7 +9,7 @@ Game cờ caro X/O cho cả nhà, chơi ngay trên trình duyệt máy tính ho�
 - 6 hình nền vui cho bé trai và bé gái
 - Tiếng Việt / English / 中文
 
-Chơi tại https://phuonglh811.github.io/co-caro/. Các trò chơi khác của cả nhà: https://phuonglh811.github.io/
+Chơi tại https://hplgames.github.io/co-caro/. Các trò chơi khác của cả nhà: https://hplgames.github.io/
 
 Toàn bộ game nằm trong một file `index.html`, không cần cài đặt.
 
